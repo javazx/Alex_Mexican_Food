@@ -33,6 +33,44 @@ Ubicación: `app/src/main/java/com/example/alexmexicanfood/`
 ### Adaptadores
 - `ProductAdapter.java`, `MenuItemAdapter.java`, `CartAdapter.java`, `SaleItemAdapter.java`, `SalesHistoryAdapter.java`.
 
+#### Detalles de Adaptadores
+- `ProductAdapter`: Renderiza la lista de productos usando `ItemProductBinding` y `item_product.xml`. Vistas: `text_product_name`, `text_product_description`, `text_product_price`. Formatea precios con `Locale.getDefault()`; puede exponer callbacks de clic para abrir detalle o agregar al carrito.
+- `MenuItemAdapter`: Renderiza productos en el menú de venta con `ItemMenuProductBinding` y `item_menu_product.xml`. Suele manejar clic para seleccionar/agregar producto.
+- `CartAdapter`: Muestra el contenido del carrito a partir de `item_cart.xml` (`text_product_name`, `text_product_price`). La lógica de totales/actualización se gestiona en `CartActivity`. Puede ofrecer acciones para remover o cambiar cantidades si aplica.
+- `SaleItemAdapter`: Presenta los elementos vendidos dentro de una venta, usando un layout específico para ítems de venta (p.ej., `item_sale.xml`). Muestra nombre, cantidad y subtotal si está disponible en el modelo.
+- `SalesHistoryAdapter`: Lista ventas del historial usando `item_sale.xml` (campos `text_sale_id`, `text_sale_date`, `text_sale_total`). Orientado a mostrar resumen de cada venta.
+
+##### Estructura común y buenas prácticas
+- Métodos clave: `onCreateViewHolder`, `onBindViewHolder`, `getItemCount`; clase interna `ViewHolder` que conserva el binding.
+- Usa ViewBinding para evitar `findViewById` y errores de tipos.
+- Evita cálculo pesado o accesos a la base de datos en `onBindViewHolder`; prepara datos en la Activity/Fragment.
+- Formatea precios con `String.format(Locale.getDefault(), "$%.2f", price)` para localización adecuada.
+- Considera `DiffUtil`/`ListAdapter` para actualizaciones eficientes y `setHasStableIds(true)` si gestionas IDs estables.
+
+##### Patrón de callback de clic (ejemplo simplificado)
+```java
+public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
+    public interface OnProductClickListener { void onProductClick(Producto p); }
+    private final List<Producto> items;
+    private final OnProductClickListener listener;
+
+    // ... constructor y ViewHolder con ItemProductBinding ...
+
+    @Override
+    public void onBindViewHolder(@NonNull VH holder, int position) {
+        Producto p = items.get(position);
+        holder.binding.textProductName.setText(p.getNombre());
+        holder.binding.textProductDescription.setText(p.getDescripcion());
+        holder.binding.textProductPrice.setText(
+            String.format(Locale.getDefault(), "$%.2f", p.getPrecio())
+        );
+        holder.binding.getRoot().setOnClickListener(v -> {
+            if (listener != null) listener.onProductClick(p);
+        });
+    }
+}
+```
+
 ### Modelos de Datos
 - `Producto.java`, `Cart.java`, `Sale.java`, `SaleItem.java`.
 
@@ -100,11 +138,6 @@ Ubicación: `app/src/main/res/`
 - Falta SDK 34: instala la plataforma desde SDK Manager.
 - `local.properties` ausente: Android Studio lo genera automáticamente al abrir el proyecto, o crea el archivo con `sdk.dir` apuntando a tu SDK.
 
-## Contribución
-- Haz fork, crea una rama (`feature/...`), realiza cambios y abre un Pull Request.
-- Sigue el estilo del proyecto y agrega pruebas si aplica.
-
-Si necesitas diagramas de flujo de pantallas, ejemplos de uso de `DatabaseHelper` o detalles de tablas, indícalo y los añadimos aquí.
 ---
 
 > Desarrollado por Jesus Alexander Valeriano para el CBT02, Octubre 2025
